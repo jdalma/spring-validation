@@ -49,6 +49,14 @@ public class ValidationItemControllerV3 {
     public String addItem(@Validated @ModelAttribute Item item, BindingResult bindingResult , RedirectAttributes redirectAttributes , Model model) {
         // @Validated가 없으면 Item엔티티의 검증 어노테이션이 실행되지 않는다
 
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                bindingResult.reject("totalPriceMin", new Object[]{10000,
+                        resultPrice}, null);
+            }
+        }
+
         // 검증에 실패하면 다시 입력 폼으로
         if(bindingResult.hasErrors()){
             log.info("bindingResult = {}" , bindingResult);
@@ -70,7 +78,22 @@ public class ValidationItemControllerV3 {
     }
 
     @PostMapping("/{itemId}/edit")
-    public String edit(@PathVariable Long itemId, @ModelAttribute Item item) {
+    public String edit(@PathVariable Long itemId, @Validated @ModelAttribute Item item , BindingResult bindingResult) {
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                bindingResult.reject("totalPriceMin", new Object[]{10000,
+                        resultPrice}, null);
+            }
+        }
+
+
+        // 검증에 실패하면 다시 입력 폼으로
+        if(bindingResult.hasErrors()){
+            log.info("bindingResult = {}" , bindingResult);
+            return "validation/v3/editForm";
+        }
+
         itemRepository.update(itemId, item);
         return "redirect:/validation/v3/items/{itemId}";
     }
